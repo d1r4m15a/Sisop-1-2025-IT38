@@ -1,0 +1,41 @@
+{
+  "name": "affirmations",
+  "version": "0.0.0",
+  "description": "an api for getting affirmations",
+  "main": "index.js",
+  "scripts": {
+      "test": "jest --coverage --forceExit",
+    "start": "node index.js",
+    "update-coc": "weallbehave -o . && git add CODE_OF_CONDUCT.md && git commit -m 'docs(coc): updated CODE_OF_CONDUCT.md'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/annthurium/affirmations.git"
+  },
+  "engines": {
+    "node": "8.0.0"
+  },
+  "author": {
+    "name": "tilde",
+    "twitter": "@annthurium"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/annthurium/affirmations/issues"
+  },
+  "homepage": "https://github.com/annthurium/affirmations#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "jest": "^25.2.3",
+    "supertest": "^4.0.2",
+    "weallbehave": "^1.2.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ]
+  }
+}
