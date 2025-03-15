@@ -173,6 +173,7 @@ case "$command" in
 
     *)
         echo "Error: Unknown command '$command'. Use -h or --help for usage info."
+        echo "Syntax=./pokemon_analysis.sh -h or ./pokemon_analysis.sh --help"
         exit 1
         ;;
 esac
