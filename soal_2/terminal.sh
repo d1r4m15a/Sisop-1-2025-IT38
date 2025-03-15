@@ -52,15 +52,15 @@ display_crontab_menu() {
     echo -e "\e[1;36m====================================="
     read -p "Enter option [1-6]: " choice
 
-    case $choice in
-        1) ./scripts/manager.sh add-cpu; read -p "Press Enter to continue..."; display_crontab_menu ;;
-        2) ./scripts/manager.sh add-ram; read -p "Press Enter to continue..."; display_crontab_menu ;;
-        3) ./scripts/manager.sh remove-cpu; read -p "Press Enter to continue..."; display_crontab_menu ;;
-        4) ./scripts/manager.sh remove-ram; read -p "Press Enter to continue..."; display_crontab_menu ;;
-        5) ./scripts/manager.sh view-scheduled; read -p "Press Enter to continue..."; display_crontab_menu ;;
+    case "$choice" in
+        1) ./scripts/manager.sh add_core; display_crontab_menu ;;
+        2) ./scripts/manager.sh add_frag; display_crontab_menu ;;
+        3) ./scripts/manager.sh remove_core; display_crontab_menu ;;
+        4) ./scripts/manager.sh remove_frag; display_crontab_menu ;;
+        5) ./scripts/manager.sh view_jobs; read -p "Press Enter to continue..."; display_crontab_menu ;;
         6) echo -e "\e[1;31mExiting... Goodbye!\e[0m"; exit 0 ;;
-        *) echo -e "\e[1;31mInvalid option. Try again.\e[0m"; sleep 2; display_crontab_menu ;;
     esac
+
 }
 
 display_main_menu
