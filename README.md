@@ -501,7 +501,7 @@ Menggunakan AWK untuk mendapatkan hasil dengan 2 angka desimal (`%.2f`).
 
 ---
 
-## Soal 2G - Crontab Manager
+## Soal 2G “On Fate's Approach”
 
 ### Tujuan
 - Mengatur pemantauan CPU dan RAM secara otomatis dengan crontab.
@@ -510,21 +510,35 @@ Menggunakan AWK untuk mendapatkan hasil dengan 2 angka desimal (`%.2f`).
 1. **Menambah atau menghapus monitoring CPU dan RAM** dari crontab.
 2. **Menampilkan daftar job aktif** di crontab.
 
-### Contoh Eksekusi
-```sh
-bash scripts/manager.sh
-```
+### Kode Program
+
 
 ---
 
-## Soal 2H - Log Monitoring
+## Soal 2H “The Disfigured Flow of Time”
+### Deskripsi Soal
+Karena tentunya script yang dimasukkan ke crontab tidak mengeluarkan output di terminal, buatlah 2 log file, core.log dan fragment.log di folder ./log/, yang dimana masing-masing terhubung ke program usage monitoring untuk usage tersebut. 
+Format log:
+CPU
+[YYYY-MM-DD HH:MM:SS] - Core Usage [$CPU%] - Terminal Model [$CPU_Model]
+
+RAM
+[YYYY-MM-DD HH:MM:SS] - Fragment Usage [$RAM%] - Fragment Count [$RAM MB] - Details [Total: $TOTAL MB, Available: $AVAILABLE MB]
+
 
 ### Tujuan
 - Menyimpan log pemantauan CPU dan RAM dalam folder `log/`.
 
 ### Implementasi
 1. **`core.log`** untuk menyimpan data CPU.
+```
+echo "$TIMESTAMP - Core Usage [$CORE_USAGE%] - Terminal Model [$CORE_MODEL]" >> "$LOG_FILE"
+```
 2. **`fragment.log`** untuk menyimpan data RAM.
+```
+echo "$TIMESTAMP - Fragment Usage [$FRAG_USAGE%] - Fragment Count [$USED_MEM KB] - Details [Total: $TOTAL_MEM KB, Available: $AVAIL_MEM KB]" >> "$LOG_FILE"
+```
+
 
 ---
 
