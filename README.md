@@ -461,7 +461,6 @@ Selain CPU, “fragments” juga perlu dipantau untuk memastikan equilibrium dun
 Lokasi shell script: ./scripts/frag_monitor.sh
 Pastikan perhitungan kalian untuk CPU dan RAM memiliki output yang sama dengan suatu package resource checker, ex: top, htop, btop, bpytop. 
 
-
 ### Tujuan
 - Memantau penggunaan RAM secara real-time.
 
@@ -511,6 +510,79 @@ Menggunakan AWK untuk mendapatkan hasil dengan 2 angka desimal (`%.2f`).
 2. **Menampilkan daftar job aktif** di crontab.
 
 ### Kode Program
+Pendefinisian Variabel
+```
+CORE_MONITOR_SCRIPT="./scripts/core_monitor.sh"
+FRAG_MONITOR_SCRIPT="./scripts/frag_monitor.sh"
+CORE_LOG="./logs/core.log"
+FRAG_LOG="./logs/fragment.log"
+```
+CORE_MONITOR_SCRIPT → Lokasi script monitoring CPU.
+FRAG_MONITOR_SCRIPT → Lokasi script monitoring RAM.
+CORE_LOG → File log untuk mencatat aktivitas monitoring CPU.
+FRAG_LOG → File log untuk mencatat aktivitas monitoring RAM.
+```
+INTERVAL="*/2 * * * *"
+```
+INTERVAL → Menentukan crontab agar dijalankan setiap 2 menit.
+```
+add_core_monitor() {
+    (crontab -l 2>/dev/null | grep -v "$CORE_MONITOR_SCRIPT"; echo "$INTERVAL $CORE_MONITOR_SCRIPT") | crontab -
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - Core Monitor added to crontab (Puasa Daud schedule)." >> "$CORE_LOG"
+}
+```
+Menambahkan perintah monitoring CPU ke crontab jika belum ada (grep -v mencegah duplikasi).
+Mencatat log ke dalam core.log dengan format [YYYY-MM-DD HH:MM:SS] - Core Monitor added.
+```
+add_frag_monitor() {
+    (crontab -l 2>/dev/null | grep -v "$FRAG_MONITOR_SCRIPT"; echo "$INTERVAL $FRAG_MONITOR_SCRIPT") | crontab -
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - Fragment Monitor added to crontab." >> "$FRAG_LOG"
+}
+```
+Sama seperti monitoring CPU, tetapi untuk monitoring RAM.
+Log aktivitas disimpan ke dalam fragment.log.
+```
+remove_core_monitor() {
+    (crontab -l 2>/dev/null | grep -v "$CORE_MONITOR_SCRIPT") | crontab -
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - Core Monitor removed from crontab." >> "$CORE_LOG"
+}
+```
+Menghapus perintah monitoring CPU dari crontab menggunakan grep -v.
+Mencatat log penghapusan di core.log.
+```
+remove_frag_monitor() {
+    (crontab -l 2>/dev/null | grep -v "$FRAG_MONITOR_SCRIPT") | crontab -
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - Fragment Monitor removed from crontab." >> "$FRAG_LOG"
+}
+```
+Sama seperti remove_core_monitor, tetapi untuk menghapus monitoring RAM.
+Log penghapusan disimpan di fragment.log.
+
+```
+view_scheduled_jobs() {
+    echo -e "\e[1;34mScheduled Monitoring Jobs:\e[0m"
+    crontab -l 2>/dev/null || echo "No scheduled jobs found."
+}
+```
+Menampilkan semua job yang dijadwalkan dalam crontab.
+Jika tidak ada job aktif, akan menampilkan pesan "No scheduled jobs found."
+```
+case "$1" in
+    add_core) add_core_monitor ;;
+    add_frag) add_frag_monitor ;;
+    remove_core) remove_core_monitor ;;
+    remove_frag) remove_frag_monitor ;;
+    view_jobs) view_scheduled_jobs ;;
+    *) echo "Usage: $0 {add_core|add_frag|remove_core|remove_frag|view_jobs}" ;;
+esac
+```
+$1 menentukan perintah yang dijalankan:
+add_core → Tambahkan monitoring CPU.
+add_frag → Tambahkan monitoring RAM.
+remove_core → Hapus monitoring CPU.
+remove_frag → Hapus monitoring RAM.
+view_jobs → Lihat daftar monitoring yang aktif.
+Jika input tidak valid, akan menampilkan cara penggunaan yang benar.
 
 
 ---
@@ -665,186 +737,222 @@ Sistem ini berhasil mengimplementasikan fitur login, register, validasi keamanan
 # Laporan Resmi Modul 1 - Soal 4
 
 ## Daftar Isi
-1. [Pendahuluan](#pendahuluan)
-2. [Soal 4A - Summary Data](#soal-4a---summary-data)
-3. [Soal 4B - Sorting Data](#soal-4b---sorting-data)
-4. [Soal 4C - Pencarian Nama Pokemon](#soal-4c---pencarian-nama-pokemon)
-5. [Soal 4D - Filter Berdasarkan Type](#soal-4d---filter-berdasarkan-type)
-6. [Soal 4E - Error Handling](#soal-4e---error-handling)
-7. [Soal 4F - Help Screen](#soal-4f---help-screen)
-8. [Kesimpulan](#kesimpulan)
-9. [Kendala & Perbaikan](#kendala--perbaikan)
+1. [Pendahuluan](#pendahuluan)  
+2. [Soal 4A - Summary Data](#soal-4a---summary-data)  
+3. [Soal 4B - Sorting Data](#soal-4b---sorting-data)  
+4. [Soal 4C - Pencarian Nama Pokemon](#soal-4c---pencarian-nama-pokemon)  
+5. [Soal 4D - Filter Berdasarkan Type](#soal-4d---filter-berdasarkan-type)  
+6. [Soal 4E - Error Handling](#soal-4e---error-handling)  
+7. [Soal 4F - Help Screen](#soal-4f---help-screen)  
+8. [Kesimpulan](#kesimpulan)  
+9. [Kendala & Perbaikan](#kendala--perbaikan)  
 
 ---
 
-## Pendahuluan
-Dalam tugas ini, kita melakukan analisis terhadap dataset **pokemon_usage.csv** untuk memahami tren Pokemon yang digunakan dalam turnamen "Generation 9 OverUsed 6v6 Singles". Sistem ini mencakup:
+## Pendahuluan  
+### Pembuka Soal  
+Pada suatu hari, anda diminta teman anda untuk membantunya mempersiapkan diri untuk turnamen Pokemon **"Generation 9 OverUsed 6v6 Singles"** dengan cara membuatkan tim yang cocok untuknya. Tetapi, anda tidak memahami meta yang dimainkan di turnamen tersebut. Untungnya, seorang informan memberikan anda data **pokemon_usage.csv** yang bisa dianalisis.  
 
-- **Menampilkan summary data** tentang penggunaan Pokemon.
-- **Mengurutkan data berdasarkan kolom tertentu**.
-- **Mencari Pokemon berdasarkan nama.**
-- **Menyaring Pokemon berdasarkan tipe**.
-- **Menangani kesalahan input** agar program tidak crash.
-- **Menyediakan help screen dengan penjelasan lengkap.**
+### Interpretasi Keseluruhan Soal  
+Untuk menganalisis data tersebut, dibuatlah script **`pokemon_analysis.sh`** yang memiliki fitur:  
+- **Melihat ringkasan data** (Pokemon dengan Usage% dan Raw Usage tertinggi).  
+- **Mengurutkan data berdasarkan kolom tertentu**.  
+- **Mencari Pokemon berdasarkan nama**.  
+- **Menyaring Pokemon berdasarkan tipe**.  
+- **Menangani kesalahan input** agar program tidak crash.  
+- **Menyediakan help screen dengan penjelasan lengkap**.  
 
 ---
 
-## Soal 4A - Summary Data
+## Soal 4A - Summary Data  
+### Deskripsi Soal  
+Menampilkan **Pokemon dengan Usage% dan Raw Usage tertinggi** dalam dataset.  
 
-### Tujuan
-- Menampilkan Pokemon dengan **Usage% dan Raw Usage tertinggi**.
+### Implementasi (`pokemon_analysis.sh --info`)  
+1. Membaca dataset `pokemon_usage.csv`.  
+2. Menemukan **Pokemon dengan Usage% tertinggi**.  
+3. Menemukan **Pokemon dengan Raw Usage tertinggi**.  
+4. Menampilkan hasil dalam format yang jelas.  
 
-### Implementasi (`pokemon_analysis.sh --info`)
-1. Membaca dataset `pokemon_usage.csv`.
-2. Menemukan Pokemon dengan **Usage% tertinggi**.
-3. Menemukan Pokemon dengan **Raw Usage tertinggi**.
-4. Menampilkan hasil dalam format yang jelas.
-
-### Contoh Eksekusi
+### Kode pada `pokemon_analysis.sh`  
 ```sh
-bash pokemon_analysis.sh pokemon_usage.csv --info
+awk -F ',' '
+NR > 1 {
+    usage = $2 + 0
+    rawUsage = $3 + 0
+    if (usage > maxUsage) {
+        maxUsage = usage
+        highestPokemonUsage = $1
+    }
+    if (rawUsage > maxRawUsage) {
+        maxRawUsage = rawUsage
+        highestPokemonRawUsage = $1
+    }
+}
+END {
+    print "Summary of " FILENAME
+    print "Highest Adjusted Usage: " highestPokemonUsage " with " maxUsage "%"
+    print "Highest Raw Usage: " highestPokemonRawUsage " with " maxRawUsage " uses"
+}' "$csv_file"
 ```
-
-### Contoh Output
-```
-Summary of pokemon_usage.csv
-Highest Adjusted Usage: Garchomp with 31.09%
-Highest Raw Usage: Landorus-Therian with 563831 uses
-```
-
----
 
 ## Soal 4B - Sorting Data
+### Deskripsi Soal
+Mengurutkan Pokemon berdasarkan kolom tertentu (Usage%, Raw Usage, HP, Atk, dll.).
 
-### Tujuan
-- Mengurutkan Pokemon berdasarkan kolom tertentu (Usage%, Raw Usage, HP, Atk, dll.).
-
-### Implementasi (`pokemon_analysis.sh --sort <kolom>`)
-1. Membaca dataset `pokemon_usage.csv`.
-2. Mengurutkan berdasarkan kolom yang diminta.
-3. Menampilkan hasil dalam format CSV.
-
-### Contoh Eksekusi
-```sh
-bash pokemon_analysis.sh pokemon_usage.csv --sort usage
+### Implementasi (pokemon_analysis.sh --sort <kolom>)
+Membaca dataset pokemon_usage.csv.
+Mengurutkan berdasarkan kolom yang diminta.
+Menampilkan hasil dalam format CSV.
+### Kode pada pokemon_analysis.sh
 ```
+declare -A column_map
+column_map=(
+    ["name"]=1 ["usage"]=2 ["raw"]=3 ["hp"]=6 ["atk"]=7
+    ["def"]=8 ["spatk"]=9 ["spdef"]=10 ["speed"]=11
+)
 
-### Contoh Output
+if [[ -z ${column_map[$option]} ]]; then
+    echo "Error: Invalid column name '$option'."
+    exit 1
+fi
+col_index=${column_map[$option]}
+echo "$(head -n 1 "$csv_file")"
+if [[ "$col_index" -eq 1 ]]; then
+    tail -n +2 "$csv_file" | sort -t ',' -k"$col_index","$col_index"
+else
+    tail -n +2 "$csv_file" | sort -t ',' -k"$col_index","$col_index" -nr
+fi
 ```
-Pokemon,Usage%,RawUsage,Type1,Type2,HP,Atk,Def,SpAtk,SpDef,Speed
-Garchomp,31.09%,253499,Ground,Dragon,108,130,95,80,85,102
-Landorus-Therian,27.06%,563831,Ground,Flying,89,145,90,105,80,91
-...
-```
-
----
-
 ## Soal 4C - Pencarian Nama Pokemon
+### Deskripsi Soal
+Menampilkan statistik dari Pokemon berdasarkan nama.
 
-### Tujuan
-- Menampilkan statistik dari Pokemon berdasarkan nama yang dimasukkan.
+### Implementasi (pokemon_analysis.sh --grep <nama>)
+Membaca dataset pokemon_usage.csv.
+Mencari Pokemon yang sesuai dengan nama yang dimasukkan.
+Menampilkan hasil dalam format CSV.
 
-### Implementasi (`pokemon_analysis.sh --grep <nama>`)
-1. Membaca dataset `pokemon_usage.csv`.
-2. Mencari Pokemon yang sesuai dengan nama yang dimasukkan.
-3. Menampilkan hasil dalam format CSV.
-
-### Contoh Eksekusi
-```sh
-bash pokemon_analysis.sh pokemon_usage.csv --grep rotom
+### Kode program
 ```
-
-### Contoh Output
+awk -F',' -v name="$option" 'NR==1 || tolower($1) == tolower(name)' "$csv_file"
 ```
-Pokemon,Usage%,RawUsage,Type1,Type2,HP,Atk,Def,SpAtk,SpDef,Speed
-Rotom-Wash,1.62%,71243,Electric,Water,50,65,107,105,107,86
-```
-
----
-
 ## Soal 4D - Filter Berdasarkan Type
+### Deskripsi Soal
+Menampilkan Pokemon yang memiliki tipe tertentu.
 
-### Tujuan
-- Menampilkan Pokemon yang memiliki tipe tertentu.
+### Implementasi (pokemon_analysis.sh --filter <type>)
+Membaca dataset pokemon_usage.csv.
+Memfilter berdasarkan tipe yang diminta.
+Menampilkan hasil dalam format CSV.
 
-### Implementasi (`pokemon_analysis.sh --filter <type>`)
-1. Membaca dataset `pokemon_usage.csv`.
-2. Memfilter berdasarkan tipe yang diminta.
-3. Menampilkan hasil dalam format CSV.
-
-### Contoh Eksekusi
-```sh
-bash pokemon_analysis.sh pokemon_usage.csv --filter dark
+### Kode program
 ```
-
-### Contoh Output
+awk -F ',' -v type="$option" 'NR > 1 && (tolower($4) == tolower(type) || tolower($5) == tolower(type))' "$csv_file" | sort -t ',' -k2 -nr
 ```
-Pokemon,Usage%,RawUsage,Type1,Type2,HP,Atk,Def,SpAtk,SpDef,Speed
-Ting-Lu,21.52%,192107,Dark,Ground,155,110,125,55,80,45
-Kingambit,21.27%,412146,Dark,Steel,100,135,120,60,85,50
-```
-
----
 
 ## Soal 4E - Error Handling
-
-### Tujuan
-- Menangani input yang tidak valid dengan pesan error yang jelas.
-
-### Implementasi
-1. Memeriksa apakah semua argumen yang dibutuhkan sudah diberikan.
-2. Jika tidak valid, tampilkan pesan error yang informatif.
-
-### Contoh Eksekusi
-```sh
-bash pokemon_analysis.sh pokemon_usage.csv --filter
+### Deskripsi Soal
+Menangani kesalahan input dengan pesan error yang jelas.
+### Kode
+```
+if [[ -z "$option" ]]; then
+    echo "Error: no filter option provided"
+    exit 1
+fi
 ```
 
-### Contoh Output
-```
-Error: no filter option provided
-Use -h or --help for more information
+## Soal 4F - Help screen yang menarik
+### Kode Program
 ```
 
----
+if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$#" -lt 2 ]; then
+    echo "                                              @@@@@@@@@@@@@@@                                       
+               +++@@@@@@@               @@@@@@=........:----+@@@@                                   
+                   ++#@@@@%*+        ++%%+-...:=#@@@@@@@@@%*+=--#@@                                 
+                     @@@@@@@#++    ++#@@%+=@@@@@@         @@@@#+==#@                                
+                     @@@@@@@@@@  ++*@@@@@@@@@                 @@+=#@            @@@@@@@@@@@@        
+                     @@@@@@@@@#+*@@@@@@@@@@@@                 @@*+==@@     @%%%%=.........:*%%%@    
+                     ++%@@@@@@@@@@@@@@@@@@%++                   @%+=@@     @#:..:-%@@@@@@+----+@@   
+                      @@@@@@@@@@@@@@@@@@@@@ @@@@@@@@@@@@@@      @%+=@@  @@@.:-+@@@@      @@@%-+@@   
+                       ++@@@%*#%%%%%@@@@%*+%*-===========%%%@@  @%+=@@ @%=.=+%@           @@%==+#@@ 
+                         +*@@@#+===+@@@@%+====*@@@@@@@@#++++*@@@@%*+@@@%%+-@@@              @@#=#@@@
+                              @@@@@@@@@@@@@@@@@        @@@@@@@@@@%*+@@@*-++@@@            @@@@#+#@@@
+                       @@@@%%%*++++++#@*++++*%%%%%@@@@%+-........:*%@@@#+%@              @@@@@@@@@@@
+                     @@%%%#+++++==+++#%*++++++++++%%%#=-:...:-----::%%%#*%@              @@@@@@@@@@@
+                     @@*++++=-=+=--=+++++==++=-=+++++#@@@..------------*@@@              @@@@@@@@@@@
+                  @@%*++++=-----..-=+++++++=-:....+++++++%#+=-------.:--=#%@@          **%@@@@@@@@*+
+                @@%#+++-----:.....---=++++++++++==::-=++++*%#-----:....----%%%@        @@@@@@@@%%@@ 
+               @@%+++=-:..........--==+++++++++++++=::-=++*%#==---:..:------+%%@      +%@@@@%@#++   
+              @@%%+=-:......:===::-=++++++++#@%%%%**++==++++*@#---::----------+%%@   ++#@@%*+       
+              @%*+-:...-==-:-+++==++++++++++*%+-:.##**+++++-=@#-----------------*@@                 
+              @%*+..:::=+++=+*********++++++++#%-.-+%#++++=:-@#-::-------==-----*@@                 
+            @@%%*+.:-==++****#######%#*****++*##-.-+%#-=+--.-%*==--------++-----*@@                 
+            @@*++++++****##*=...::::=+#####***-...+*#*---...:-*@+------==++---==#@@                 
+            @@*+*******#%::....:---+@*--=***=....:@%+=-:.::.:-*@+---==-=+++-===+#@@                 
+            @@**%%....:=+....:-----+@+.:-#%....:=+%#+=-::=-.:=*@+--=++=++++-=+**#@@                 
+ @@@        @@##*+...:=*#..:-------+@+..:#%...=*##+++=-==+=:-#%@+--=+++++=--=+#@@                   
+@#+*@@      @@@%-...:-=+*.:--------=#*=::+*===*#*+++++=++++=+@@@+-==+++++===+##@@                   
+@#:=@@    @@#*%%-.::---+*::--------=+#@=:-=%%@#++++++++++++*#@%#+=++++++++++*@@                     
+@#:-+#@@@@@@+.*%-.---+**+*+=-------==*#****###*++++++++*#+*#%@#=++++=+++++++*#%@@                   
+@#:..-==++#@+.*%=:---+*++*+=----:-**-==*###@#++++++++++*####%@#+++==-====+++++#@@                   
+@#+-...::-+@+.=***----=+*::-----.-%%*+-++++@#++++++++++*###@@@#++==------+++++#@@                   
+ @@*+++---=**+==#%-------++*+---.-%%++*++++@#++++++++*#%@##@%###=--------==+++#@@                   
+   @@@@#####%@*+%%::--=*#---+#+-.-%%*#@*+#%@#++++++*##*%@@%##%%@*==--------+*#%@@                   
+       @@@@@@@%%@%*=:-=#@..:+@*-.-%@@%***%@@#+++#%++*#%%@#*+*@@@*+=--------+*@@                     
+            @@#####**-:=***#*+=-.-%#=++#%%@#*+++*#+*###%@+++*@@@%#+=-------+*@@                     
+            @@+=++++**#=-+++=-----=+#*+%@@%+++++#%%%@@%#*+*%%@@@@@%#-----=+%%@@                     
+            @@+-==+++#%+-----------=**+%@@%+++#%@@@@@%**++*%@@@@@@@%-----++@@@                      
+            @@=:--=+#%@##--------==++++%@#*+*###%@@%#*+++#%@@@@@@@@%---=+#%@@                       
+            @@-..:-+@@ @@%#=----+++++++%%*++#@%%@@**+++#%@@@@@@  @@%---=+%@                         
+            @@-...-+@@   @%++++++++*%#+%%*+%@@@@#++++*%%@@@      @@%---=+%@                         
+            @@#*=--=*#@@ @%%#++++++*@#+%%*+@@@@@*++++#@@         @@%:-+++%@                         
+              @%+=++++*%@  @%%*+++++*#%#*%%@@@#*+++*%%@@        @%=:-=+#%%@                         
+               @@%+++++++@@@@@@@@@@@@@@@@@@@#++++++*@@          @%+--=+#@@                          
+               @@%+++++++*#@@@@@@@@@@@@@@@@@#=++++%%@@        @@=:::-=+#@@                          
+                @@%#+++++%%@@@@@@%*+@@@@@@%==-==++@@@         @@-.:--=+#@@                          
+                   @@@@@@@@@@@@@@@@@ @@@@@%-----++@@@       @@#----=+++#@@                          
+                   ++#@@@@@@@@@@@@@@  @ @@%----=#@@@      @@@@#++++++*%@@@                          
+                    +**%@@%=*@@@@%**   @%-:.:--=#@        @@@@@%%%%%%@@@@@                          
+                      +++@@@@@@@+++    @%-..:-=+%@       @@@@@@@@@@@@@@@@@                          
+                                     @@-....:-=+%@       @%=+@@@@@@@@@@@@@                          
+                                   ++#@+----=+#@@@       @@%%@@@@@@@@@@#++                          
+                                   @@@@@@@@@@@@@@@       @@@@@@@@@@@@#++                            
+                                 ++*@@@@@@@@@@@@@@                                                  
+                                 @@#=*@@@@@@@@@@@@                                                  
+                                 @@@@@@@@@@@@@@@*+                                                  
+                                 @@@@@@@@@@@@@#++                                                                                                 
+"
+    echo -e "Hello there, I'm Tauros and I'm gonna help you use this script by knowing its commmands
+\U1F449 First of all, to summon me to help you, just use ./pokemon_analysis.sh -h  
+or ./pokemon_analysis.sh --help
+\U1F449 Next, the template/base command to use the script is this
+Usage: ./pokemon_analysis.sh <file_name> [options]
+\U1F449Replace the <file_name> with pokemon_usage.csv or file with similar name 
+as long as its in the same directory as the script and contain data with
+Pokemon,Usage%,RawUsage,Type1,Type2,HP,Atk,Def,SpAtk,SpDef,Speed as the header
+\U1F449 For the [option] you can choose one of the features bellow \U1F447
+  -i, --info          Display the highest adjusted and raw usage.
+  -s, --sort <method> Sort the data by the specified column.
+                      name      Sort by Pokemon name.
+                      usage     Sort by Adjusted Usage.
+                      raw       Sort by Raw Usage.
+                      hp        Sort by HP.
+                      atk       Sort by Attack.
+                      def       Sort by Defense.
+                      spatk     Sort by Special Attack.
+                      spdef     Sort by Special Defense.
+                      speed     Sort by Speed.
+  -g, --grep <name>   Search for a specific Pokemon sorted by usage.
+  -f, --filter <type> Filter by type of Pokemon sorted by usage.
+Huh? how can I do this \U1F447, a Tauros can't do this normally
+I guess I'm special then
+Anyway if you need me just type ./pokemon_analysis.sh -h or ./pokemon_analysis.sh --help
+See ya next time :D \U1F44B
+  "
 
-## Soal 4F - Help Screen
-
-### Tujuan
-- Memberikan petunjuk lengkap kepada pengguna.
-
-### Implementasi (`pokemon_analysis.sh -h` atau `--help`)
-1. Menampilkan ASCII art yang menarik.
-2. Menjelaskan setiap command dan sub-command.
-
-### Contoh Eksekusi
-```sh
-bash pokemon_analysis.sh -h
+    exit 0
+fi
 ```
-
-### Contoh Output
-```
-subject to change
-Usage:
-  pokemon_analysis.sh <file> [command]
-
-Commands:
-  --info          Menampilkan summary data
-  --sort <col>    Mengurutkan data berdasarkan kolom tertentu
-  --grep <name>   Mencari Pokemon berdasarkan nama
-  --filter <type> Menyaring Pokemon berdasarkan type
-  -h, --help      Menampilkan petunjuk penggunaan
-```
-
----
-
-## Kesimpulan
-Sistem ini berhasil menganalisis data Pokemon dengan fitur summary, sorting, pencarian nama, filter tipe, error handling, dan help screen.
-
----
-
-## Kendala & Perbaikan
-- **Menyesuaikan format output agar lebih user-friendly.**
-- **Mengoptimalkan pencarian agar lebih cepat pada dataset besar.**
-
+kode diatas menjeaskan cara kerja ke user, dengan tambahan emote ascii dan gambar pokemon tauros
 
