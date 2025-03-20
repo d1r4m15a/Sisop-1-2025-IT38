@@ -52,6 +52,10 @@ Penjelasan:
 ---
 
 ## Pendahuluan
+### Pembuka Soal
+Anda merupakan seorang “Observer”, dari banyak dunia yang dibuat dari ingatan yang berbentuk “fragments” - yang berisi kemungkinan yang dapat terjadi di dunia lain. Namun, akhir-akhir ini terdapat anomali-anomali yang seharusnya tidak terjadi, perpindahan “fragments” di berbagai dunia, yang kemungkinan terjadi dikarenakan seorang “Seeker” yang berubah menjadi “Ascendant”, atau dalam kata lain, “God”. Tidak semua “Observer” menjadi “Player”, tetapi disini anda ditugaskan untuk ikut serta dalam menjaga equilibrium dari dunia-dunia yang terbuat dari “Arcaea”. [Author: Nathan / etern1ty]
+
+### Interpretasi Keseluruhan Soal
 Dalam dunia "Arcaea", sistem login/register dibutuhkan untuk membedakan antara "Player" dan "Observer" serta mengamankan akses ke dunia tersebut. Sistem ini mencakup:
 
 - **Pembuatan akun** melalui register dan login.
@@ -63,77 +67,198 @@ Dalam dunia "Arcaea", sistem login/register dibutuhkan untuk membedakan antara "
 
 ---
 
-## Soal 2A - Register
+## Soal 2A - “First Step in a New World”
+### Deskripsi Soal
+Tugas pertama, dikarenakan kejadian “Axiom of The End” yang semakin mendekat, diperlukan sistem untuk mencatat “Player” aktif agar terpisah dari “Observer”. Buatlah dua shell script, login.sh dan register.sh, yang dimana database “Player” disimpan di /data/player.csv. Untuk register, parameter yang dipakai yaitu email, username, dan password. Untuk login, parameter yang dipakai yaitu email dan password.
 
-### Tujuan
-- Membuat sistem registrasi "Player" di dunia "Arcaea".
-- Menyimpan informasi akun dalam `player.csv`.
-
-### Implementasi (`register.sh`)
-1. Meminta input **email, username, password**.
-2. Menyimpan data ke dalam `player.csv` setelah validasi.
-
-### Contoh Eksekusi
+### Pembuatan direktori dan script awal
 ```sh
-bash register.sh
+code login.sh
+code register.sh
+mkdir data
+cd data
+touch player.csv
+```
+`code` digunakan untuk menulis file dengan visual studio code 
+`mkdir` untuk membuat direktori data
+`cd` untuk masuk ke direktori
+`touch` untuk membuat file kosong dengan nama dan format yang telah ditentukan (csv)
+### Kode pada register.sh
+```
+data_folder="./data"
+player_db="$data_folder/player.csv"
+```
+menyimpan alamat player.csv sehingga dapat melakukan read,write pada player.csv
+
+```
+mkdir -p "$data_folder"
+touch "$player_db"
+```
+untuk berjaga-jaga bila user belum membuat direktori maka ditambahkan command tersebut
+
+```
+read -p "Enter your email: " email
+```
+untuk menerima email yang di-input user
+
+```
+read -p "Enter your username: " username
+```
+untuk menerima username yang di-input user
+
+```
+read -s -p "Enter password: " password
+```
+untuk menerima password yang di-input user
+
+### Kode pada login.sh
+```
+read -p "Enter your email: " email
+```
+untuk menerima input email untuk login
+
+```
+read -s -p "Enter password: " password
 ```
 
 ---
 
-## Soal 2B - Login
+## Soal 2B - “Radiant Genesis”
+### Deskripsi Soal
+Sistem login/register untuk para "Player" tentunya memiliki constraint, yaitu validasi email dan password. 
+Email harus memiliki format yang benar dengan tanda @ dan titik, sementara password harus memiliki minimal 8 karakter, setidaknya satu huruf kecil, satu huruf besar, dan satu angka untuk menjaga keamanan data di dunia “Arcaea”.
 
 ### Tujuan
-- Mengautentikasi "Player" agar dapat mengakses sistem "Arcaea".
+- Memastikan format email valid.
+- Memastikan password aman.
 
 ### Implementasi (`login.sh`)
 1. Meminta input **email dan password**.
 2. Cek apakah **email terdaftar**.
 3. Verifikasi password dengan **hashing SHA-256**.
 
-### Contoh Eksekusi
-```sh
-bash login.sh
+### Kode pada register.sh
 ```
+if [[ "$email" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+```
+mengecek validasi email
+```
+if [[ ${#password} -ge 8 && "$password" =~ [A-Z] && "$password" =~ [a-z] && "$password" =~ [0-9] ]];
+```
+mengecek validasi password
+```
+# Input email
+while true; do
+    read -p "Enter your email: " email
+    if [[ "$email" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+        if grep -q "^$email," "$player_db"; then
+            echo "Email is already registered. Please use another email."
+        else
+            break
+        fi
+    else
+        echo "Invalid email format. Try again."
+    fi
+done
+
+# Input username
+read -p "Enter your username: " username
+
+# Input password
+while true; do
+    read -s -p "Enter password: " password
+    echo
+    if [[ ${#password} -ge 8 && "$password" =~ [A-Z] && "$password" =~ [a-z] && "$password" =~ [0-9] ]]; then
+        hashed_password=$(echo -n "$salt$password" | sha256sum | awk '{print $1}')
+        echo "$email,$username,$hashed_password" >> "$player_db"
+        echo "Registration successful"
+        sleep 2
+        break
+    else
+        echo "Password must be at least 8 characters, contain an uppercase letter, a lowercase letter, and a number."
+    fi
+done
+```
+Digunakan while loop agar user dapat retry menginput email dan password bila tidak valid, serta diberi petunjuk bagaimana format yang valid
+
+### Kode pada login.sh
+```
+if ! grep -q "^$email," "$player_db"; then
+    echo "Email not found. Please register first."
+    exit 1
+fi
+```
+Pada login.sh cukup mengecek apakah email yang user masukkan cocok dengan data yang sudah ada pada `player.csv`
+```
+echo
+hashed_password=$(echo -n "$salt$password" | sha256sum | awk '{print $1}')
+
+# Validate credentials
+if grep -q "^$email,.*,$hashed_password" "$player_db"; then
+    echo "Login successful. Welcome!"
+else
+    echo "Incorrect password. Try again."
+    exit 1
+fi
+```
+Melakukan hashing(dijelaskan pada soal selanjutnya) dan mencocokan hasilnya dengan data pada `player.csv`
 
 ---
 
-## Soal 2C - Validasi Email dan Password
-
-### Tujuan
-- Memastikan format email valid.
-- Memastikan password aman.
-
-### Implementasi
-1. **Validasi email** menggunakan regex (harus ada `@` dan `.`).
-2. **Validasi password**:
-   - Minimal 8 karakter.
-   - Mengandung huruf besar, huruf kecil, dan angka.
-
----
-
-## Soal 2D - Unik Email
+## Soal 2C - “Unceasing Spirit”
+### Deskripsi Soal
+Karena diperlukan pengecekan keaslian “Player” yang aktif, maka diperlukan sistem untuk pencegahan duplikasi “Player”. Jadikan sistem login/register tidak bisa memakai email yang sama (email = unique), tetapi tidak ada pengecekan tambahan untuk username.
 
 ### Tujuan
 - Mencegah penggunaan email yang sama untuk lebih dari satu akun.
 
-### Implementasi
-1. Mengecek apakah email sudah terdaftar di `player.csv`.
-2. Jika sudah terdaftar, tampilkan pesan error dan minta input ulang.
+### Kode pada register.sh
+```
+if grep -q "^$email," "$player_db"; then
+            echo "Email is already registered. Please use another email."
+        else
+            break
+        fi
+```
+`grep` mengambil email yang cocok sesuai yang telah diinputkan bila ada kecocokan maka email tidak dianggap valid
+
 
 ---
 
-## Soal 2E - Hashing Password
+## Soal 2D - 
+### Deskripsi Soal
+Password adalah kunci akses ke dunia Arcaea. Untuk menjaga keamanan "Player", password perlu disimpan dalam bentuk yang tidak mudah diakses. Gunakan algoritma hashing sha256sum yang memakai static salt (bebas).
 
 ### Tujuan
 - Mengamankan password agar tidak tersimpan dalam bentuk plaintext.
-
 ### Implementasi
 1. Menggunakan **SHA-256 dengan static salt**.
 2. Simpan hasil hash ke dalam `player.csv`.
+### Code program
+```
+salt="arcaea_salt"
+```
+static salt disini menggunakan teks "arcaea_salt
+```
+if [[ ${#password} -ge 8 && "$password" =~ [A-Z] && "$password" =~ [a-z] && "$password" =~ [0-9] ]]; then
+        hashed_password=$(echo -n "$salt$password" | sha256sum | awk '{print $1}')
+        echo "$email,$username,$hashed_password" >> "$player_db"
+        echo "Registration successful"
+        sleep 2
+        break
+    else
+        echo "Password must be at least 8 characters, contain an uppercase letter, a lowercase letter, and a number."
+    fi
+```
+apa bila password telah memenuhi syarat maka akan dihashing (algoritma SHA-256) dan disave di player.csv
 
 ---
 
-## Soal 2F - Monitoring CPU
+## Soal 2E - “The Brutality of Glass”
+### Deskripsi Soal
+Setelah sukses login, "Player" perlu memiliki akses ke sistem pemantauan sumber daya. Sistem harus dapat melacak penggunaan CPU (dalam persentase) yang menjadi representasi “Core” di dunia “Arcaea”. Pastikan kalian juga bisa melacak “terminal” yang digunakan oleh “Player”, yaitu CPU Model dari device mereka. 
+Lokasi shell script: ./scripts/core_monitor.sh
+
 
 ### Tujuan
 - Memantau penggunaan CPU secara real-time.
@@ -141,10 +266,11 @@ bash login.sh
 ### Implementasi (`core_monitor.sh`)
 1. Mengambil **persentase penggunaan CPU**.
 2. Mengambil **model CPU**.
-3. Menyimpan hasil ke dalam `core.log` dengan format:
-
+   
+### Kode
+Pada directori soal kita buat direktori untuk scripts dan membuat scripts
 ```
-[YYYY-MM-DD HH:MM:SS] - Core Usage [$CPU%] - Terminal Model [$CPU_Model]
+
 ```
 
 ### Contoh Eksekusi
