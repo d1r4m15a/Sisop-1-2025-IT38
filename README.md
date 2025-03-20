@@ -226,99 +226,189 @@ Sistem ini berhasil mengimplementasikan fitur login, register, validasi keamanan
 
 
 
-# Soal 4
+# Laporan Resmi Modul 1 - Soal 4
 
 ## Daftar Isi
 1. [Pendahuluan](#pendahuluan)
-2. [Soal 4A - Backup File Log](#soal-4a---backup-file-log)
-3. [Soal 4B - Enkripsi Log](#soal-4b---enkripsi-log)
-4. [Soal 4C - Dekripsi Log](#soal-4c---dekripsi-log)
-5. [Soal 4D - Automasi Backup](#soal-4d---automasi-backup)
-6. [Kesimpulan](#kesimpulan)
-7. [Kendala & Perbaikan](#kendala--perbaikan)
+2. [Soal 4A - Summary Data](#soal-4a---summary-data)
+3. [Soal 4B - Sorting Data](#soal-4b---sorting-data)
+4. [Soal 4C - Pencarian Nama Pokemon](#soal-4c---pencarian-nama-pokemon)
+5. [Soal 4D - Filter Berdasarkan Type](#soal-4d---filter-berdasarkan-type)
+6. [Soal 4E - Error Handling](#soal-4e---error-handling)
+7. [Soal 4F - Help Screen](#soal-4f---help-screen)
+8. [Kesimpulan](#kesimpulan)
+9. [Kendala & Perbaikan](#kendala--perbaikan)
 
 ---
 
 ## Pendahuluan
-Johan Liebert adalah orang yang sangat kalkulatif dan ingin mencatat log sistem komputernya dengan ketentuan:
-- File backup diberi format `HH:MM dd:mm:yyyy.txt`.
-- Isi file harus dienkripsi berdasarkan waktu backup.
-- Disediakan script untuk dekripsi.
-- Backup otomatis setiap 2 jam menggunakan cron.
+Dalam tugas ini, kita melakukan analisis terhadap dataset **pokemon_usage.csv** untuk memahami tren Pokemon yang digunakan dalam turnamen "Generation 9 OverUsed 6v6 Singles". Sistem ini mencakup:
+
+- **Menampilkan summary data** tentang penggunaan Pokemon.
+- **Mengurutkan data berdasarkan kolom tertentu**.
+- **Mencari Pokemon berdasarkan nama.**
+- **Menyaring Pokemon berdasarkan tipe**.
+- **Menangani kesalahan input** agar program tidak crash.
+- **Menyediakan help screen dengan penjelasan lengkap.**
 
 ---
 
-## Soal 4A - Backup File Log
+## Soal 4A - Summary Data
 
 ### Tujuan
-- Membuat salinan `syslog` dalam format yang ditentukan.
+- Menampilkan Pokemon dengan **Usage% dan Raw Usage tertinggi**.
 
-### Implementasi (`log_backup.sh`)
-1. Mengambil waktu saat ini (`HH:MM dd:mm:yyyy`).
-2. Menyalin isi `/var/log/syslog` ke dalam file backup.
+### Implementasi (`pokemon_analysis.sh --info`)
+1. Membaca dataset `pokemon_usage.csv`.
+2. Menemukan Pokemon dengan **Usage% tertinggi**.
+3. Menemukan Pokemon dengan **Raw Usage tertinggi**.
+4. Menampilkan hasil dalam format yang jelas.
 
 ### Contoh Eksekusi
 ```sh
-bash log_backup.sh
+bash pokemon_analysis.sh pokemon_usage.csv --info
+```
+
+### Contoh Output
+```
+Summary of pokemon_usage.csv
+Highest Adjusted Usage: Garchomp with 31.09%
+Highest Raw Usage: Landorus-Therian with 563831 uses
 ```
 
 ---
 
-## Soal 4B - Enkripsi Log
+## Soal 4B - Sorting Data
 
 ### Tujuan
-- Mengenkripsi isi log menggunakan **Caesar Cipher** berdasarkan jam backup.
+- Mengurutkan Pokemon berdasarkan kolom tertentu (Usage%, Raw Usage, HP, Atk, dll.).
 
-### Implementasi (`log_encrypt.sh`)
-1. Mengambil **jam backup** sebagai shift enkripsi.
-2. Menggunakan **tr** untuk menggantikan setiap karakter dalam file.
-3. Menyimpan hasil enkripsi dalam file backup.
+### Implementasi (`pokemon_analysis.sh --sort <kolom>`)
+1. Membaca dataset `pokemon_usage.csv`.
+2. Mengurutkan berdasarkan kolom yang diminta.
+3. Menampilkan hasil dalam format CSV.
 
 ### Contoh Eksekusi
 ```sh
-bash log_encrypt.sh
+bash pokemon_analysis.sh pokemon_usage.csv --sort usage
+```
+
+### Contoh Output
+```
+Pokemon,Usage%,RawUsage,Type1,Type2,HP,Atk,Def,SpAtk,SpDef,Speed
+Garchomp,31.09%,253499,Ground,Dragon,108,130,95,80,85,102
+Landorus-Therian,27.06%,563831,Ground,Flying,89,145,90,105,80,91
+...
 ```
 
 ---
 
-## Soal 4C - Dekripsi Log
+## Soal 4C - Pencarian Nama Pokemon
 
 ### Tujuan
-- Mengembalikan isi file log yang telah dienkripsi.
+- Menampilkan statistik dari Pokemon berdasarkan nama yang dimasukkan.
 
-### Implementasi (`log_decrypt.sh`)
-1. Menggunakan **tr** untuk menggantikan kembali karakter yang telah diubah.
-2. Menyimpan hasil dekripsi dalam file baru.
+### Implementasi (`pokemon_analysis.sh --grep <nama>`)
+1. Membaca dataset `pokemon_usage.csv`.
+2. Mencari Pokemon yang sesuai dengan nama yang dimasukkan.
+3. Menampilkan hasil dalam format CSV.
 
 ### Contoh Eksekusi
 ```sh
-bash log_decrypt.sh
+bash pokemon_analysis.sh pokemon_usage.csv --grep rotom
+```
+
+### Contoh Output
+```
+Pokemon,Usage%,RawUsage,Type1,Type2,HP,Atk,Def,SpAtk,SpDef,Speed
+Rotom-Wash,1.62%,71243,Electric,Water,50,65,107,105,107,86
 ```
 
 ---
 
-## Soal 4D - Automasi Backup
+## Soal 4D - Filter Berdasarkan Type
 
 ### Tujuan
-- Menjadwalkan backup log setiap 2 jam secara otomatis.
+- Menampilkan Pokemon yang memiliki tipe tertentu.
 
-### Implementasi (Crontab)
-1. Menambahkan entri crontab:
+### Implementasi (`pokemon_analysis.sh --filter <type>`)
+1. Membaca dataset `pokemon_usage.csv`.
+2. Memfilter berdasarkan tipe yang diminta.
+3. Menampilkan hasil dalam format CSV.
+
+### Contoh Eksekusi
 ```sh
-0 */2 * * * /bin/bash /path/to/log_backup.sh
+bash pokemon_analysis.sh pokemon_usage.csv --filter dark
 ```
 
-2. Memastikan script berjalan secara otomatis setiap 2 jam.
+### Contoh Output
+```
+Pokemon,Usage%,RawUsage,Type1,Type2,HP,Atk,Def,SpAtk,SpDef,Speed
+Ting-Lu,21.52%,192107,Dark,Ground,155,110,125,55,80,45
+Kingambit,21.27%,412146,Dark,Steel,100,135,120,60,85,50
+```
+
+---
+
+## Soal 4E - Error Handling
+
+### Tujuan
+- Menangani input yang tidak valid dengan pesan error yang jelas.
+
+### Implementasi
+1. Memeriksa apakah semua argumen yang dibutuhkan sudah diberikan.
+2. Jika tidak valid, tampilkan pesan error yang informatif.
+
+### Contoh Eksekusi
+```sh
+bash pokemon_analysis.sh pokemon_usage.csv --filter
+```
+
+### Contoh Output
+```
+Error: no filter option provided
+Use -h or --help for more information
+```
+
+---
+
+## Soal 4F - Help Screen
+
+### Tujuan
+- Memberikan petunjuk lengkap kepada pengguna.
+
+### Implementasi (`pokemon_analysis.sh -h` atau `--help`)
+1. Menampilkan ASCII art yang menarik.
+2. Menjelaskan setiap command dan sub-command.
+
+### Contoh Eksekusi
+```sh
+bash pokemon_analysis.sh -h
+```
+
+### Contoh Output
+```
+subject to change
+Usage:
+  pokemon_analysis.sh <file> [command]
+
+Commands:
+  --info          Menampilkan summary data
+  --sort <col>    Mengurutkan data berdasarkan kolom tertentu
+  --grep <name>   Mencari Pokemon berdasarkan nama
+  --filter <type> Menyaring Pokemon berdasarkan type
+  -h, --help      Menampilkan petunjuk penggunaan
+```
 
 ---
 
 ## Kesimpulan
-Sistem berhasil membuat backup, mengenkripsi, dan mendekripsi file log secara otomatis setiap 2 jam.
+Sistem ini berhasil menganalisis data Pokemon dengan fitur summary, sorting, pencarian nama, filter tipe, error handling, dan help screen.
 
 ---
 
 ## Kendala & Perbaikan
-- **Menyesuaikan format log agar lebih mudah dibaca.**
-- **Menguji berbagai skenario enkripsi dan dekripsi untuk memastikan akurasi.**
-- **Memastikan cron berjalan dengan benar pada semua sistem.**
+- **Menyesuaikan format output agar lebih user-friendly.**
+- **Mengoptimalkan pencarian agar lebih cepat pada dataset besar.**
+
 
