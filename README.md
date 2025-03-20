@@ -174,21 +174,6 @@ awk -F"," 'NR > 1 { split($5, date, "-"); if ($9 == "Asia" && date[1] > 2023) co
 ```
 # Soal 2
 
-## Daftar Isi
-1. [Pendahuluan](#pendahuluan)
-2. [Soal 2A - Register](#soal-2a---register)
-3. [Soal 2B - Login](#soal-2b---login)
-4. [Soal 2C - Validasi Email dan Password](#soal-2c---validasi-email-dan-password)
-5. [Soal 2D - Unik Email](#soal-2d---unik-email)
-6. [Soal 2E - Hashing Password](#soal-2e---hashing-password)
-7. [Soal 2F - Monitoring CPU](#soal-2f---monitoring-cpu)
-8. [Soal 2G - Monitoring RAM](#soal-2g---monitoring-ram)
-9. [Soal 2H - Crontab Manager](#soal-2h---crontab-manager)
-10. [Soal 2I - Log Monitoring](#soal-2i---log-monitoring)
-11. [Soal 2J - Terminal Utama](#soal-2j---terminal-utama)
-12. [Kesimpulan](#kesimpulan)
-13. [Kendala & Perbaikan](#kendala--perbaikan)
-
 ---
 
 ## Pendahuluan
