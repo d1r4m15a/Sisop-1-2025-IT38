@@ -7,31 +7,171 @@
 |Thariq Kyran Aryunaldi     | 5027241073 |
 
 ## Soal 1
-> Penataan format text dirapikan menggunakan Aplikasi Notion yang kemudian di copy paste 
-### Download file csv
+Pada awal pengerjaan soal pertama, kita diminta untuk menginstall file bernama reading_data.csv. Kita perlu mengunduh dahulu agar bisa kita eksekusi di terminal Linux kita.
+### Download File CSV
 
 ```
 wget "https://drive.usercontent.google.com/u/0/uc?id=1l8fsj5LZLwXBlHaqhfJVjz_T0p7EJjqV&export=download" -O reading_data.csv && echo "File berhasil didownload" || echo "Gagal"
 ```
-Dalam awal mengerjakan kita menggunakan command `Wget` berfungsi untuk mengunduh file dengan format FTP, HTTP maupun HTTPS
+Dikarenakan file tersebut online maka kita menggunakan command `wget` berfungsi untuk mengunduh file dengan format HTTP maupun HTTPS. Masukkan link URL File tersebut ke dalam `wget` dan membuat kondisi if else menggunakan operator `||` dan command `echo` serta isi pesan yang ingin dikeluarkan. Cek isi file yang telah diunduh menggunakan `cat reading_data.csv`
+```
+"File berhasil didownload"
+```
+Namun, apabila hasil dari command `cat` tersebut yaitu seperti berikut ini:
+```
+<!DOCTYPE html><html<head>title>Google Drive - Virus scan warning</title><meta.....
+```
+Hal Ini terjadi karena Google Drive menampilkan halaman peringatan sebelum file diunduh, bukan langsung mengirimkan file. Google Drive memiliki proteksi khusus terhadap `wget`. Untuk mengatasi ini, kita bisa menggunakan `gdown`:
+```
+sudo apt update
+sudo apt install python3-pip 
+pip3 install --break-system-packages gdown
+gdown --id 1l8fsj5LZLwXBlHaqhfJVjz_T0p7EJjqV -O reading_data.csv
+cat reading_data.csv
+```
+1. Update`sudo apt update` Memastikan daftar paket di sistem sudah diperbarui sebelum instalasi.
+2. Install `python3-pip` Menginstal pip untuk Python 3 agar bisa mengelola paket Python.
+3. Install `gdown` dengan Override dengan 
+Menggunakan opsi `--break-system-packages` untuk melewati pembatasan manajemen paket pada Python yang dikelola sistem.
+4. Download File dari Google Drive: `gdown --id 1l8fsj5LZLwXBlHaqhfJVjz_T0p7EJjqV -O reading_data.csv` Menggunakan `gdown` untuk mengunduh file dari Google Drive berdasarkan ID.
 
-> Mantap 
+Cek isi file yang telah diunduh menggunakan `cat reading_data.csv`
 ## Soal 1A
 ```
-awk -F',' '$2 ~ /Chris Hemsworth/ {count++} 
-END {
-	if (count > 0) 
-		printf "Chris Hemsworth membaca %d buku\n", count; 
-	else 
-		print "Tidak ditemukan\n"}' reading_data.csv
+awk -F',' '$2 ~ /Chris Hemsworth/ {count++} END {if (count > 0) printf "Chris Hemsworth membaca %d buku\n", count; else print "Tidak ditemukan\n"}' reading_data.csv
 ```
 Penjelasan:
-1. **`awk -F','`**
+1. `awk -F ','`
     - **`F','`** berarti menggunakan tanda **koma (`,`)** sebagai pemisah kolom karena file CSV biasanya dipisahkan dengan koma.
-    - Setiap kolom bisa diakses dengan **`$1, $2, $3, ...`**.
-    - 
+2. **`$2 ~ /Chris Hemsworth/ {count++}`**
+    - **`$2`** mengacu pada **kolom ke-2**, yang berisi **nama pembaca**.
+    - **`~ /Chris Hemsworth/`** Memeriksa apakah nama dalam **kolom ke-2** cocok dengan "Chris Hemsworth".
+    - Jika cocok, maka variabel **`count`** akan bertambah **1**.
+3. **Blok `END { ... }`**
+    - Blok `END` dieksekusi setelah semua baris pada file **reading_data.csv** dibaca.
+    - **`if (count > 0)`**
+        - Jika `count` lebih besar dari **0**, artinya ada data yang cocok dengan "Chris Hemsworth".
+        - Maka, tampilkan **"Chris Hemsworth membaca `X` buku"** dengan jumlah buku yang dihitung.
+    - **`else print "Tidak ditemukan\n"`**
+        - Jika `count == 0`, artinya **Chris Hemsworth tidak ditemukan di file**, sehingga ditampilkan `"Tidak ditemukan"`.
 
+**Hasil akhir**:
+```
+Chris Hemsworth membaca 56 buku
+```
+## Soal 1B
+Soal selanjutnya disuruh mencari rata-rata durasi membaca buku dengan device tablet dari file reading_data.csv.
+```
+awk -F"," '$8 == "Tablet" {total += $6; count++} END {if (count > 0) printf "Rata-rata durasi membaca dengan Tablet adalah %.2f menit\n", total/count; else printf "Tidak ada data tablet\n"}' reading_data.csv
+```
+### Penjelasan
 
+1. **`awk -F","`**
+    - **`F","`** menggunakan **koma (`,`)** sebagai pemisah antar kolom, karena **reading_data.csv** adalah file CSV (Comma-Separated Values).
+2. **`$8 == "Tablet" {total += $6; count++}`**
+    - **`$8 == "Tablet"`** → Memeriksa apakah **kolom ke-8** berisi kata `"Tablet"`.
+    - Jika ya, maka:
+        - **`total += $6`** → Menambahkan nilai dari **kolom ke-6** (durasi membaca) ke variabel `total`.
+        - **`count++`** → Menghitung berapa banyak data yang cocok dengan `"Tablet"`.
+3. **Blok `END { ... }`**
+    - Setelah semua baris dalam **reading_data.csv** dibaca, blok **END** akan dijalankan.
+    - **`if (count > 0)`**
+        - Jika ada **setidaknya satu data** yang sesuai (`count > 0`), maka:
+            - **`total/count`** → Menghitung rata-rata durasi membaca.
+            - **`printf "Rata-rata durasi membaca dengan Tablet adalah %.2f menit\n", total/count;`**
+                - **`%.2f`** berarti hasilnya akan ditampilkan dengan **2 angka di belakang koma**.
+    - **`else printf "Tidak ada data tablet\n"`**
+        - Jika **tidak ada satupun data** (`count == 0`), maka ditampilkan satunya
+
+**Hasil akhir**:
+```
+Rata-rata durasi membaca dengan Tablet adalah 152.38 menit
+```
+## Soal 1C
+Soal ini kita disuruh menganalisis file dimana mencari Pembaca dengan rating tertinggi beserta nama (Name) dan judul bukunya (Book_Title).
+```
+awk -F"," 'NR > 1 {if ($7 > max) {max = $7; nama = $2; judul=$3}} END {if (max != "" ) print "Pembaca dengan rating tertinggi:", nama, "-", judul, "-", max; else print "Data tidak ditemukkan"}' reading_data.csv
+```
+> Objective: Nama pembaca - judul buku - rating tertinggi
+### Penjelasan:
+1. **`NR > 1`**
+    - **`NR`** adalah **Nomor Baris** (Number of Record).
+    - **`NR > 1`** berarti **melewati baris pertama** (biasanya berisi header), agar hanya membaca **data**.
+2. **`if ($7 > max) {max = $7; nama = $2; judul=$3}`**
+    - **`$7`** → Kolom ke-7 berisi **rating**.
+    - **Jika rating ($7) lebih besar dari `max`**, maka:
+        - **`max = $7`** → Update nilai rating tertinggi.
+        - **`nama = $2`** → Simpan nama pembaca (dari kolom ke-2).
+        - **`judul = $3`** → Simpan judul buku (dari kolom ke-3).
+    - Ini akan **menyimpan pembaca dan buku dengan rating tertinggi**.
+3. **Blok `END { ... }`**
+    - Setelah semua baris diproses, bagian **END** akan dijalankan.
+4. `{if (max != "" ) print "Pembaca dengan rating tertinggi:", nama, "-", judul, "-", max; else print "Data tidak ditemukkan"}'`
+    - `(max != "" )` → Mengeksekusi perintah `print` bila nilai dari variabel max tidak kosong.
+    - `else print "Data tidak ditemukkan"` → Bila tidak ada nilai dari variabel `max` maka akan mengeksekusi `else`
+
+**Hasil akhir**:
+```
+Pembaca dengan rating tertinggi: Robert Downey Jr. - Deep Space Mysteries - 6.0
+```
+## Soal 1D
+Terakhir disuruh mencari Genre paling populer di Asia ditambah harus setelah tahun 2023 serta berapa banyak buku yang dibaca.
+```
+awk -F"," '
+NR > 1 {
+    split($5, date, "-"); 
+    if ($9 == "Asia" && date[1] > 2023) 
+        count[$4]++;}
+END {
+		max = 0
+		for (genre in count) {
+			if (count[genre] > max){
+				max = count[genre];
+				popular = genre;
+			  }
+		   }
+		if (max > 0)
+			printf "Genre paling populer di Asia setelah 2023 adalah %s dengan %d buku.\n", popular, max;
+		else 
+			print "Tidak ada data sesuai kriteria";
+}' reading_data.csv
+```
+> Objective: Genre paling populer di Asia setelah 2023 adalah Science dengan 1 buku.
+### Penjelasan
+1. **`awk -F","`**
+    - Pemisah antar kolom dengan koma
+2. **`NR > 1`** 
+    - `NR > 1` memastikan baris pertama diabaikan agar tidak dihitung sebagai data.
+3. **`split($5, date, "-");`**
+    - `split($5, date, "-")` memecah **kolom ke-5 (Read_Date)** berdasarkan tanda .
+    - Hasilnya, **tahun** akan disimpan di `date[1]`, **bulan** di `date[2]`, dan **hari** di `date[3]`.
+4. **`if ($9 == "Asia" && date[1] > 2023)`**
+    - **$9 == "Asia"** → Memastikan **kolom ke-9 (Region)** adalah "Asia".
+    - **date[1] > 2023** → Memastikan tahun lebih besar dari 2023 (**setelah 31 Desember 2023**).
+5. **`count[$4]++`**
+    - **$4** adalah **kolom Genre**.
+    - **count[$4]++** menambahkan 1 ke dalam array `count`, yang berisi jumlah buku yang dibaca untuk masing-masing genre.
+6. **`END { max = 0; for (genre in count) { ... }`**
+    - Di blok **END**, kita mulai mencari genre paling populer:
+    - **`max = 0`** → guna menyimpan jumlah maksimal buku dalam suatu genre.
+    - **Loop `for (genre in count)`**
+        - Memeriksa semua genre yang telah dihitung.
+        - Jika **count[genre] lebih besar dari max**, maka:
+            - **max diperbarui dengan nilai tersebut.**
+            - **Nama genre disimpan di `popular`.**
+
+**Hasil akhir**:
+```
+Genre paling populer di Asia setelah 2023 adalah Science dengan 2 buku.
+```
+## Rangkuman codingan dari soal 1 Modul 1
+```
+sudo apt update && sudo apt install python3-pip && pip3 install gdown && gdown --id 1l8fsj5LZLwXBlHaqhfJVjz_T0p7EJjqV -O reading_data.csv && cat reading_data.csv
+awk -F',' '$2 ~ /Chris Hemsworth/ {count++} END {if (count > 0) printf "Chris Hemsworth membaca %d buku\n", count; else print "Tidak ditemukan\n"}' reading_data.csv
+awk -F"," '$8 == "Tablet" {total += $6; count++} END {if (count > 0) printf "Rata-rata durasi membaca dengan Tablet adalah %.2f menit\n", total/count; else printf "Tidak ada data tablet\n"}' reading_data.csv
+awk -F"," 'NR > 1 {if ($7 > max) {max = $7; nama = $2; judul=$3}} END {if (max != "" ) print "Pembaca dengan rating tertinggi:", nama, "-", judul, "-", max; else print "Data tidak ditemukkan"}' reading_data.csv
+awk -F"," 'NR > 1 { split($5, date, "-"); if ($9 == "Asia" && date[1] > 2023) count[$4]++ } END { max = 0; for (genre in count) { if (count[genre] > max) { max = count[genre]; popular = genre } } if (max > 0) printf "Genre paling populer di Asia setelah 2023 adalah %s dengan %d buku.\n", popular, max; else print "Tidak ada data sesuai kriteria" }' reading_data.csv
+```
 # Soal 2
 
 ## Daftar Isi
