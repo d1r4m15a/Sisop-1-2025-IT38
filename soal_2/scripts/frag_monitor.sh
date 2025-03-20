@@ -1,7 +1,7 @@
 #!/bin/bash
 # frag_monitor.sh - RAM Monitoring & Logging
 
-LOG_FILE="./logs/fragment.log"
+LOG_FILE="../logs/fragment.log"
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")
 
 TOTAL_MEM=$(awk '/MemTotal/ {print $2}' /proc/meminfo)

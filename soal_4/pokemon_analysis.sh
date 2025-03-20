@@ -158,8 +158,8 @@ case "$command" in
             echo "Error: Please specify a Pokémon name to search"
             exit 1
         fi
-        echo "$(head -n 1 "$csv_file")"
-        grep -i "$option" "$csv_file" || echo "Pokémon '$option' not found."
+        awk -F',' -v name="$option" 'NR==1 || tolower($1) == tolower(name)' "$csv_file" 
+        
         ;;
 
     --filter)
@@ -168,7 +168,7 @@ case "$command" in
             exit 1
         fi
         echo "$(head -n 1 "$csv_file")"
-        awk -F ',' -v type="$option" 'NR > 1 && (tolower($4) == tolower(type) || tolower($5) == tolower(type))' "$csv_file" | sort -t ',' -k2 -nr
+        awk -F ',' -v type="$option" 'NR > 1 && (tolower($4) == tolower(type) || tolower($5) == tolower(type))' "$csv_file" | sort -t ',' -k2 -nr 
         ;;
 
     *)

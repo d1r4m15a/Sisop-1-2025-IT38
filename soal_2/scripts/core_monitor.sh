@@ -1,7 +1,7 @@
 #!/bin/bash
 # core_monitor.sh - CPU Monitoring & Logging
 
-LOG_FILE="./logs/core.log"
+LOG_FILE="../logs/core.log"
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")
 
 CORE_MODEL=$(lscpu | awk -F ': ' '/Model name/ {gsub(/^[ \t]+/, "", $2); print $2}')
