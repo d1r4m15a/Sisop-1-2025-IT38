@@ -267,20 +267,60 @@ Lokasi shell script: ./scripts/core_monitor.sh
 1. Mengambil **persentase penggunaan CPU**.
 2. Mengambil **model CPU**.
    
-### Kode
+### Persiapan
+```
+mkdir scripts
+code core_monitor.sh
+```
 Pada directori soal kita buat direktori untuk scripts dan membuat scripts
+### Kode pada scripts
 ```
+PREV_IDLE=$(awk '/^cpu / {print $5}' /proc/stat)
+PREV_TOTAL=$(awk '/^cpu / {sum=0; for (i=2; i<=8; i++) sum+=$i; print sum}' /proc/stat)
+```
+`/proc/stat` menyimpan total waktu yang dihabiskan CPU dalam berbagai status (user, system, idle, dll.).
+`$5` adalah jumlah waktu CPU dalam keadaan idle.
+Total CPU time dihitung dengan menjumlahkan seluruh kolom dari $2 hingga $8, kecuali kolom pertama (`cpu`).
+```
+sleep 1
+```
+Hal ini dilakukan agar kita bisa menghitung perubahan penggunaan CPU dalam rentang waktu 1 detik.
+```
+IDLE=$(awk '/^cpu / {print $5}' /proc/stat)
+TOTAL=$(awk '/^cpu / {sum=0; for (i=2; i<=8; i++) sum+=$i; print sum}' /proc/stat)
+```
+Sama seperti sebelumnya, kita mengambil nilai idle terbaru (`IDLE`) dan total CPU time terbaru (`TOTAL`).
+```
+DIFF_IDLE=$((IDLE - PREV_IDLE))
+DIFF_TOTAL=$((TOTAL - PREV_TOTAL))
+```
+`DIFF_IDLE`: Selisih waktu idle dalam 1 detik.
+`DIFF_TOTAL`: Selisih total waktu CPU yang digunakan dalam 1 detik.
+```
+CORE_USAGE=$(awk -v total="$DIFF_TOTAL" -v idle="$DIFF_IDLE" 'BEGIN { usage = (100*(total-idle))/total; printf "%.5f", usage }')
+```
+Sesuai rumus:
+#insert picture later
+Menggunakan AWK untuk melakukan perhitungan floating-point (%.5f menampilkan 5 angka desimal).
+```
+CORE_USAGE=$(echo "$CORE_USAGE" | sed -e 's/0*$//' -e 's/\.$//')
+```
+Mengoutput performance cpu yang telah dikalkulasi dan menghapus trailing zeros (0.50000 → 0.5).
+serta menghapus titik jika angka desimal habis (5. → 5).
 
 ```
-
-### Contoh Eksekusi
-```sh
-bash scripts/core_monitor.sh
+CORE_MODEL=$(lscpu | awk -F ': ' '/Model name/ {gsub(/^[ \t]+/, "", $2); print $2}')
 ```
+Command diatas untuk mendapat model terminal/model cpu user dan menyimpannya pada variabel `CORE_MODEL`
 
 ---
 
-## Soal 2G - Monitoring RAM
+## Soal 2F “In Grief and Great Delight”
+### Deskripsi soal
+Selain CPU, “fragments” juga perlu dipantau untuk memastikan equilibrium dunia “Arcaea”. RAM menjadi representasi dari “fragments” di dunia “Arcaea”, yang dimana dipantau dalam persentase usage, dan juga penggunaan RAM sekarang. 
+Lokasi shell script: ./scripts/frag_monitor.sh
+Pastikan perhitungan kalian untuk CPU dan RAM memiliki output yang sama dengan suatu package resource checker, ex: top, htop, btop, bpytop. 
+
 
 ### Tujuan
 - Memantau penggunaan RAM secara real-time.
@@ -288,20 +328,40 @@ bash scripts/core_monitor.sh
 ### Implementasi (`frag_monitor.sh`)
 1. Mengambil **persentase penggunaan RAM**.
 2. Menyimpan informasi **total dan available RAM**.
-3. Menyimpan hasil ke dalam `fragment.log` dengan format:
+
+### Persiapan
+Pada directori `/scripts`
+```
+code frag_monitor.sh
+```
+kita buat frag_monitor.sh
+
+
+### Kode pada frag_monitor.sh
+```
+TOTAL_MEM=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
+AVAIL_MEM=$(awk '/MemAvailable/ {print $2}' /proc/meminfo)
+```
+`MemTotal`: Jumlah total RAM dalam satuan kilobyte (kB).
+`MemAvailable`: RAM yang masih tersedia dan dapat digunakan oleh sistem tanpa perlu mengambil dari swap.
 
 ```
-[YYYY-MM-DD HH:MM:SS] - Fragment Usage [$RAM%] - Fragment Count [$RAM MB] - Details [Total: $TOTAL MB, Available: $AVAILABLE MB]
+USED_MEM=$((TOTAL_MEM - AVAIL_MEM))
 ```
+Sesuai rumus:
+add image
 
-### Contoh Eksekusi
-```sh
-bash scripts/frag_monitor.sh
+Hasilnya dalam kilobyte (kB).
+
 ```
+FRAG_USAGE=$(awk -v used="$USED_MEM" -v total="$TOTAL_MEM" 'BEGIN { usage = (100*used)/total; printf "%.2f", usage }')
+```
+Rumus:
+Menggunakan AWK untuk mendapatkan hasil dengan 2 angka desimal (`%.2f`).
 
 ---
 
-## Soal 2H - Crontab Manager
+## Soal 2G - Crontab Manager
 
 ### Tujuan
 - Mengatur pemantauan CPU dan RAM secara otomatis dengan crontab.
@@ -317,7 +377,7 @@ bash scripts/manager.sh
 
 ---
 
-## Soal 2I - Log Monitoring
+## Soal 2H - Log Monitoring
 
 ### Tujuan
 - Menyimpan log pemantauan CPU dan RAM dalam folder `log/`.
@@ -328,7 +388,15 @@ bash scripts/manager.sh
 
 ---
 
-## Soal 2J - Terminal Utama
+## Soal 2I “Irruption of New Color”
+### Deskripsi soal
+Sistem harus memiliki antarmuka utama yang menggabungkan semua komponen. Ini akan menjadi titik masuk bagi "Player" untuk mengakses seluruh sistem. Buatlah shell script terminal.sh, yang berisi user flow berikut:
+Register
+Login
+	Crontab manager (add/rem core & fragment usage)
+	Exit
+Exit
+
 
 ### Tujuan
 - Menggabungkan seluruh sistem dalam satu antarmuka utama.
@@ -337,10 +405,98 @@ bash scripts/manager.sh
 1. Menampilkan menu utama.
 2. Memanggil script `register.sh`, `login.sh`, dan `manager.sh`.
 
-### Contoh Eksekusi
-```sh
-bash terminal.sh
+### Kode pada terminal.sh
+Ketika script dijalankan, fungsi display_main_menu akan menampilkan menu utama dengan tiga pilihan utama:
 ```
+echo -e "\e[1;36m====================================="
+echo "        ARCAEA TERMINAL"
+echo -e "=====================================\e[0m"
+echo -e "\e[1;33m1   | Register New Account\e[0m"
+echo -e "\e[1;32m2   | Login to Existing Account\e[0m"
+echo -e "\e[1;31m3   | Exit\e[0m"
+echo -e "\e[1;36m====================================="
+
+```
+1 | `Register New Account` → Menjalankan `register.sh` untuk membuat akun baru.
+2 | `Login to Existing Account` → Menjalankan `login.sh`, jika berhasil login akan masuk ke menu Crontab Manager.
+3 | `Exit` → Keluar dari program.
+Note:
+Warna teks ditambahkan menggunakan ANSI escape codes untuk tampilan yang lebih menarik di terminal.
+
+```
+1)
+    ./register.sh
+    sleep 2
+    display_main_menu
+    ;;
+```
+Saat pengguna memilih opsi `1`, script akan menjalankan `register.sh` untuk proses pendaftaran.
+Setelah selesai, sistem menunggu 2 detik (`sleep 2`) dan kembali ke menu utama.
+
+```
+2)
+    if ./login.sh; then
+        display_crontab_menu
+    else
+        echo -e "\e[1;31mLogin failed. Returning to main menu.\e[0m"
+        sleep 2
+        display_main_menu
+    fi
+    ;;
+```
+Jika login berhasil (`./login.sh` mengembalikan exit code `0`), maka pengguna masuk ke `display_crontab_menu.`
+Jika login gagal, akan muncul pesan error dan kembali ke menu utama.
+```
+3)
+    echo -e "\e[1;31mExiting... Goodbye!\e[0m"
+    exit 0
+    ;;
+```
+Keluar dari program dengan menampilkan pesan `Exiting... Goodbye!.`
+`exit 0` memastikan program berhenti dengan sukses.
+
+```
+*)
+    echo -e "\e[1;31mInvalid option. Try again.\e[0m"
+    sleep 2
+    display_main_menu
+    ;;
+```
+Jika pengguna memasukkan angka selain `1-3`, maka akan muncul pesan error, menunggu 2 detik, lalu kembali ke menu utama.
+#### Setalah login
+Jika pengguna berhasil login, mereka akan masuk ke menu Crontab Manager untuk mengelola monitoring CPU & RAM.
+```
+echo -e "\e[1;36m====================================="
+echo "        ARCAEA TERMINAL"
+echo -e "=====================================\e[0m"
+echo -e "\e[1;32m1   | Add Core Monitor to Crontab\e[0m"
+echo -e "\e[1;32m2   | Add Fragment Monitor to Crontab\e[0m"
+echo -e "\e[1;31m3   | Remove Core Monitor from Crontab\e[0m"
+echo -e "\e[1;31m4   | Remove Fragment Monitor from Crontab\e[0m"
+echo -e "\e[1;34m5   | View Scheduled Monitoring Jobs\e[0m"
+echo -e "\e[1;31m6   | Exit\e[0m"
+echo -e "\e[1;36m====================================="
+```
+Pilihan Menu Crontab Manager
+Add Core Monitor (Option 1) → Menambahkan monitoring CPU ke crontab.
+Add Fragment Monitor (Option 2) → Menambahkan monitoring RAM ke crontab.
+Remove Core Monitor (Option 3) → Menghapus monitoring CPU dari crontab.
+Remove Fragment Monitor (Option 4) → Menghapus monitoring RAM dari crontab.
+View Scheduled Jobs (Option 5) → Melihat daftar monitoring aktif di crontab.
+Exit (Option 6) → Keluar dari program.
+
+```
+1) ./scripts/manager.sh add_core; display_crontab_menu ;;
+2) ./scripts/manager.sh add_frag; display_crontab_menu ;;
+3) ./scripts/manager.sh remove_core; display_crontab_menu ;;
+4) ./scripts/manager.sh remove_frag; display_crontab_menu ;;
+5) ./scripts/manager.sh view_jobs; read -p "Press Enter to continue..."; display_crontab_menu ;;
+6) echo -e "\e[1;31mExiting... Goodbye!\e[0m"; exit 0 ;;
+```
+Untuk menghubungkan dengan `manager.sh`
+Setiap pilihan akan memanggil `manager.sh` dengan argumen sesuai kebutuhan (`add_core`, `remove_core`, dll.).
+Setelah eksekusi selesai, menu akan ditampilkan kembali (`display_crontab_menu`).
+Untuk melihat daftar cron jobs (Option 5), pengguna harus menekan Enter sebelum kembali ke menu.
 
 ---
 
