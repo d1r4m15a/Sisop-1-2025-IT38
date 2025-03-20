@@ -716,8 +716,162 @@ Sistem ini berhasil mengimplementasikan fitur login, register, validasi keamanan
 
 ---
 
+# Soal 3
 
+Untuk soal ini diminta membuat skrip interaktif bash. Deskripsi soalnya adalah:
 
+Untuk merayakan ulang tahun ke 52 album The Dark Side of the Moon, tim PR Pink Floyd mengadakan sebuah lomba dimana peserta diminta untuk membuat sebuah script bertemakan setidaknya 5 dari 10 lagu dalam album tersebut. Sebagai salah satu peserta, kamu memutuskan untuk memilih Speak to Me, On the Run, Time, Money, dan Brain Damage. Saat program ini dijalankan, terminal harus dibersihkan terlebih dahulu agar tidak mengganggu tampilan dari fungsi fungsi yang kamu buat. Program ini dijalankan dengan cara ./dsotm.sh --play=”Track” dengan Track sebagai nama nama lagu yang kamu pilih.
+
+5 nama lagu yang di gunakan untuk soal ini adalah:
+
+1. **`Speak to Me`**
+    - Untuk nomor 1 kita diberikan API dari https://github.com/annthurium/affirmations, fungsinya adalah untuk memberikan words of affirmations setiap detik.
+1. **`On the Run`**
+    - Nomor 2 adalah progress bar dari 0 sampai 100 persen, progress bertambah random dengan interval waktu di antara 0.1 sampai 1 detik. 
+1. **`Time`**
+    - Nomor 3 adalah jam yang menunjukkan waktu, ini termasuk tahun, bulan, hari, jam, menit, dan detik. Jam nya update setiap detik.
+1. **`Money`**
+    - Nomor 4 adalah animasi menggunakan karakter mata uang yang jatuh dari atas layar.
+1. **`Brain Damage`**
+    - Nomor 5 menjalankan proses yang sedang berjalan.
+
+   ## Soal 3A - Speak to Me
+
+```
+if [[ $song == "Speak to Me" ]]
+then
+    while [ true ]
+    do
+        read -n1 -s -t 0.1 key
+        if [[ $key == "q" ]]; then
+            echo ""
+            break
+        fi
+        af=$(curl -H "Accept: application/text" "https://www.affirmations.dev" 2>/dev/null)
+        echo $af|awk -F: '{print $2}'|awk -F} '{print $1}'
+        sleep 1
+    done
+    clear
+```
+- Jika menggunakan input ``` Speak to Me ``` maka akan memasuki ``` while ``` loop
+- Line 10 ```  af=$(curl -H "Accept: application/text" "https://www.affirmations.dev" 2>/dev/null) ``` adalah untuk memanggil API supaya mendapat list affirmations nya.
+- Di samping output, API tersebut juga menampilkan statistik yang dimunculkan pada kanal error. Contoh: ``` {"affirmation":"Sucking at something is the first step towards being good at something"} ``` Hal ini akan mengganggu penampilan output yang sebenarnya oleh skrip. Untuk menghilangkan tampilan statistik tersebut, kanal error diarahkan pada null device menggunakan ``` 2>/dev/null ```.
+- Jika ``` q ``` ditekan maka akan keluar dari loop dan clear terminal.
+
+  Hasil:
+```
+  "You got this"
+  "You'll figure it out"
+  "You're a smart cookie"
+  "I believe in you"
+```
+  ## Soal 3B - On the Run
+
+```
+elif [[ $song == "On the Run" ]]
+then
+    cols=$(($(tput cols) - 7))
+    for ((num=1; num<=100; num=num+1))
+    do
+        echo -n "["
+        for ((p=1;p<=$cols;p=p+1))
+        do
+            if [[ $p -le $(($num*$cols/100)) ]]
+            then
+                echo -n "░"
+            else
+                echo -n " "
+            fi
+        done
+        echo -n "] "
+        echo -n $num
+        echo -n "%"
+        sleep $(awk -v seed=$RANDOM 'BEGIN { srand(seed); print 0.1 + rand() * 0.9 }')
+        echo -ne "\r"
+        read -n1 -s -t 0.1 key
+        if [[ $key == "q" ]]; then
+            clear
+            break
+        fi
+    done
+    echo ""
+    clear
+  ```
+- Jika input adalah ``` On the Run ```, skrip akan menampilkan progress bar yang bergerak dari 0% hingga 100%.
+- Lebar progress bar disesuaikan dengan lebar terminal menggunakan ``` tput cols ```.
+- Setiap iterasi, progress bar diperbarui dengan karakter ░ dan persentase.
+- Waktu delay ``` sleep ``` diatur secara acak antara 0.1 hingga 1 detik.
+- Tombol ``` q ``` untuk keluar dari loop.
+
+## Soal 3C - Time
+
+```
+elif [[ $song == "Time" ]]
+then
+    while [ true ]
+    do
+        read -n1 -s -t 0.1 key
+        if [[ $key == "q" ]]; then
+            clear
+            break
+        fi
+        echo -n $(date +"%Y-%m-%d %H:%M:%S")
+        sleep 1
+        echo -ne "\r"
+    done
+    clear
+```
+- Jika input adalah ``` Time ```, skrip akan menampilkan waktu saat ini (tahun, bulan, hari, jam, menit, detik yang diperbarui setiap detik.
+- Tekan tombol ``` q ``` untuk keluar dari loop.
+
+  ## Soal 3D - Money
+
+```
+  elif [[ $song == "Money" ]]
+then
+    rows=$(tput lines)
+    cols=$(tput cols)
+    chars=("$" "€" "£" "¥" "¢" "₹" "₩" "₿" "₣")
+    clear
+
+    while [ true ]
+    do
+        read -n1 -s -t 0.1 key
+        if [[ $key == "q" ]]; then
+            clear
+            break
+        fi
+        for ((i=0; i<10; i++))
+        do
+            x=$((RANDOM % cols + 1))
+            y=$((RANDOM % rows + 1))
+            char=${chars[$RANDOM % ${#chars[@]}]}
+            echo -ne "\e[${y};${x}H${char}"
+        done
+        sleep 0.2
+        echo -e "\e[1S"
+    done
+```
+- Jika input adalah ``` Money ```, skrip akan menampilkan simbol mata uang acak yang jatuh dari atas layar.
+- Simbol mata uang diambil dari array ``` chars ``` dan ditempatkan secara acak di layar.
+- ``` tput lines ``` dan ``` tput cols ``` digunakan untuk mendapatkan jumlah baris dan kolom layar terminal.
+- Setiap iterasi, layar digulir ke atas ``` \e[1S ``` untuk menciptakan efek animasi.
+- Tombol ``` q ``` untuk keluar dari loop.
+
+## Soal 3E - Brain Damage
+
+```
+elif [[ $song == "Brain Damage" ]]
+then
+    top
+    clear
+```
+- ika input adalah ``` Brain Damage ```, skrip akan menjalankan perintah ``` top ``` untuk menampilkan proses yang sedang berjalan.
+- Setelah keluar dari top dengan tombol ``` q ```, layar akan dibersihkan.
+
+### Kesimpulan
+
+Skrip bash ini adalah sebuah program interaktif yang merespons input pengguna dengan variabel ``` $song ``` yang akan muncul berbagai efek visual dan fungsionalitas berdasarkan nama lagu-lagu tertentu.
 
 # Laporan Resmi Modul 1 - Soal 4
 
