@@ -710,6 +710,17 @@ Setelah eksekusi selesai, menu akan ditampilkan kembali (`display_crontab_menu`)
 Untuk melihat daftar cron jobs (Option 5), pengguna harus menekan Enter sebelum kembali ke menu.
 
 ---
+## Testing screenshots
+![testShots](screenshot/Screenshot 2025-03-21 101028.png)
+Registrasi
+![testShots](screenshot/Screenshot 2025-03-21 101044.png)
+Login
+![testShots](screenshot/Screenshot 2025-03-21 101057.png)
+Ketika tidak ada scheduling monitoring atau setelah command 3 dan 4 dilakukan hingga bersih
+![testShots](screenshot/Screenshot 2025-03-21 101108.png)
+Setelah dilakukan command 1 dan 2
+
+---
 
 ## Kesimpulan
 Sistem ini berhasil mengimplementasikan fitur login, register, validasi keamanan, pemantauan CPU & RAM, serta memiliki Crontab Manager untuk mengotomatisasi proses monitoring. Semua data disimpan dengan aman menggunakan hashing SHA-256.
