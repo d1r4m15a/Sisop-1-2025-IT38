@@ -711,14 +711,18 @@ Untuk melihat daftar cron jobs (Option 5), pengguna harus menekan Enter sebelum 
 
 ---
 ## Testing screenshots
-![testShots](screenshot/Screenshot 2025-03-21 101028.png)
+![testShots](./screenshot/Screenshot 2025-03-21 101028.png)
 Registrasi
-![testShots](screenshot/Screenshot 2025-03-21 101044.png)
+![testShots](./screenshot/Screenshot 2025-03-21 101044.png)
 Login
-![testShots](screenshot/Screenshot 2025-03-21 101057.png)
+![testShots](./screenshot/Screenshot 2025-03-21 101057.png)
 Ketika tidak ada scheduling monitoring atau setelah command 3 dan 4 dilakukan hingga bersih
-![testShots](screenshot/Screenshot 2025-03-21 101108.png)
+![testShots](./screenshot/Screenshot 2025-03-21 101108.png)
 Setelah dilakukan command 1 dan 2
+![testShots](./screenshot/Screenshot 2025-03-21 102017.png)
+output core_monitor.sh pada core.log
+![testShots](./screenshot/Screenshot 2025-03-21 102028.png)
+output frag_monitor.sh pada fragment.log
 
 ---
 
@@ -1106,3 +1110,18 @@ fi
 ```
 kode diatas menjeaskan cara kerja ke user, dengan tambahan emote ascii dan gambar pokemon tauros
 
+### Testing Screenshots
+![testScreenshots](./screenshot/Screenshot 2025-03-21 101339.png)
+pengecekan apakah file csv benar
+![testScreenshots](./screenshot/Screenshot 2025-03-21 101359.png)
+fitur pertama soal 2A
+![testScreenshots](./screenshot/Screenshot 2025-03-21 101425.png)
+fitur kedua soal 2B dengan skala usage
+![testScreenshots](./screenshot/Screenshot 2025-03-21 101457.png)
+fitur kedua soal 2B dengan skala def
+![testScreenshots](./screenshot/Screenshot 2025-03-21 101539.png)
+searching pokemon weavile dengan fitur ketiga soal 2C
+![testScreenshots](./screenshot/Screenshot 2025-03-21 101639.png)
+uji fitur keempat sorting dengan tipe dan hanya menerima masukan tipe pokemon, bila tidak ada maka tidak akan mau keluar output
+![testScreenshots](./screenshot/Screenshot 2025-03-21 101711.png)
+help screen 
